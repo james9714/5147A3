@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <title>FIT 5147</title>
+    <!-- Load d3.js -->
+    <script src="https://d3js.org/d3.v4.js"></script>
+    <!-- Color Scale -->
+    <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+</head>
+<body>
+    <!-- Links (sit on top) -->
+    <div class="w3-top">
+        <div class="w3-row w3-large w3-light-grey">
+        <div class="w3-col s3">
+            <a href="#" class="w3-button w3-block">Home</a>
+        </div>
+        <div class="w3-col s3">
+            <a href="#industry" class="w3-button w3-block">IT industry</a>
+        </div>
+        <div class="w3-col s3">
+            <a href="#experience" class="w3-button w3-block">Experience</a>
+        </div>
+        <div class="w3-col s3">
+            <a href="#gender" class="w3-button w3-block">Gender</a>
+        </div>
+        </div>
+    </div>
+
+    <!-- Header with image -->
+    <div class="container bgimg">
+        <div class='txtct' style="color: white;">
+            <h1 style="padding-top: 150px;">Visualization of IT salaries in EU</h1>
+            <span>BY Weiyue Zhan</span>
+        </div>
+    </div>
+
+    <!-- Position -->
+    <div class="box1 grey" id="box">
+        <div id="Top15PosSal" style="margin-left: 100px;"></div>
+        <div style="margin: 50px;">Explanation</div>
+        <script>
+            // set the dimensions and margins of the graph
+            var margin = {top: 50, right: 30, bottom: 70, left: 60},
+                width = 600,
+                height = 700;
+            
+            // append the svg object to the body of the page
+            var svg_bar = d3.select("#Top15PosSal")
+              .append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height )
+              .append("g")
+                .attr("transform",
+                      "translate(60, 50)");
+
+            
+            // Parse the Data
+            d3.csv("data/Top15position.csv", function(data) {
+            
+            console.log(data);
+            // X axis
+            var x = d3.scaleLinear()
+              .range([ 0, width])
+              .domain([50000, 140000])
+              ;
+            svg_bar
+              .append("g")
+              .attr("transform", "translate(80,"+ height +")")
+              .call(d3.axisBottom(x))
+              .selectAll("text")
+                .attr("transform", "translate(-10,0)rotate(-45)")
+                .style("text-anchor", "end")
+                .attr('font-size', '8px');
+            
+            // Add Y axis
+            var y = d3.scaleBand()
+              .domain(data.map(function(d) { return d.Position; }))
+              .range([height,0])
+              .padding(0.2);;
+            svg_bar
+              .append("g")
+              .attr("transform", "translate(80,0)")
+              .call(d3.axisLeft(y));
+            
+            // Bars
+            svg_bar
+              .selectAll("#Top15PosSal")
+              .data(data)
+              .enter()
+              .append("rect")
+                // .attr("x", 81)
+                .attr("y", function(d) { return y(d.Position); })
+                // .attr("width", function(d) { return x(d.Total_Salary); })
+                .attr("height", y.bandwidth())
+                .attr("fill", "#87CEFA")
+                .attr("width", function(d) { return x(0); }) // always equal to 0
+                .attr("x", 81)
+
+            // animation
+            svg_bar
+                .selectAll("rect")
+                .transition()
+                .duration(800)
+                .attr("x", 81)
+                .attr("width", function(d) { return x(d.Total_Salary); })
+                .delay(function(d,i){return((14-i)*100)});
+            
+             
+            var tooltip = d3.select("body").append("div").attr("class", "toolTip");
+
+            // mouseover    
+            svg_bar
+              .selectAll("rect")
+              .on("mouseover", function(d) {
+                  d3.select(this)
+                      .attr("fill", "orange")
+              })
+              .on("mousemove", function(d) {
+            tooltip
+              .style("left", d3.event.pageX-70 + "px")
+              .style("top", d3.event.pageY-85 + "px")
+              .style("display", "inline-block")
+              .html((d.Position) + "<br>" + "$" + Math.round(d.Total_Salary));
+            })
+            .on("mouseout", function() {
+                d3.select(this)
+                    .attr("fill", "#87CEFA")
+                    tooltip.style("display", "none");
+                d3.select("#tooltip").classed("hidden", true);
+            });
+
+            })
+
+            
+            
+            </script>
+    </div>
+
+    <!-- IT industry -->
+    <div class="box" id="industry">
+      <div class="textbox" style="margin-left: 100px;border: dotted;">Explanation</div>
+      <div id="my_15pos" style="margin-left: 80px;margin-top: 50px;"></div>
+      <script>
+
+        // set the dimensions and margins of the graph
+        var margin = {top: 10, right: 30, bottom: 20, left: 50}
+        var width = 500
+        var height = 600
+        
+        // append the svg object to the body of the page
+        var svg_2 = d3.select("#my_15pos")
+          .append("svg")
+            .attr("width", width)
+            .attr("height", height + margin.top + margin.bottom)
+          .append("g")
+            .attr("transform",
+                  "translate(" + margin.left + "," + margin.top + ")");
+        
+        // Parse the Data
+        d3.csv("data/Salary_line.csv", function(data) {
+          console.log(data);
+          // List of subgroups = header of the csv files = soil condition here
+          var subgroups = data.columns.slice(1)
+        
+          // List of groups = species here = value of the first column called group -> I show them on the X axis
+          var groups = d3.map(data, function(d){return(d.Salary_period)}).keys()
+        
+          // Add X axis
+          var x = d3.scaleBand()
+              .domain(groups)
+              .range([0, width])
+              .padding([0.5])
+          svg_2.append("g")
+            .attr("transform", "translate(0," + height + ")")
+            .call(d3.axisBottom(x).tickSizeOuter(0));
+        
+          // Add Y axis
+          var y = d3.scaleLinear()
+            .domain([0,280])
+            .range([ height, 0 ]);
+          svg_2.append("g")
+            .call(d3.axisLeft(y));
+        
+          // color palette = one color per subgroup
+          var color = d3.scaleOrdinal()
+            .domain(subgroups)
+            .range(["#FFFFCC","#FFCC00","#FFCC66","#FF9966","#FF9900","#FF6633","#FF6600"]);
+        
+          //stack the data? --> stack per subgroup
+          var stackedData = d3.stack()
+            .keys(subgroups)
+            (data)
+            
+          var tooltip = d3.select("body").append("div").attr("class", "toolTip");
+
+          // Show the bars
+          svg_2.append("g")
+            .selectAll("g")
+            // Enter in the stack data = loop key per key = group per group
+            .data(stackedData)
+            .enter().append("g")
+              .attr("fill", function(d) { return color(d.key); })
+              .selectAll("rect")
+              // enter a second time = loop subgroup per subgroup to add all rectangles
+              .data(function(d) { return d; })
+              .enter().append("rect")
+                .attr("x", function(d) { return x(d.data.Salary_period); })
+                .attr("y", function(d) { return y(d[1]); })
+                .attr("height", function(d) { return y(d[0]) - y(d[1]); })
+                .attr("width",x.bandwidth())
+                .attr('stroke', 'grey')
+                .attr('opacity', 0.8)
+                .on("mouseover", function(d) {
+                  d3.select(this)
+                      .attr("opacity", 1);
+                  var subgroupName = d3.select(this.parentNode).datum().key;
+                  var subgroupValue = d.data[subgroupName];
+                  tooltip
+                    .style("left", d3.event.pageX + 10 + "px")
+                    .style("top", d3.event.pageY + 10 + "px")
+                    .style("display", 'inline-block')
+                    .html(subgroupName);
+                    // console.log(d.key);
+                })
+                .on("mousemove", function(d) {
+                tooltip
+                  .style("left", d3.event.pageX + 10 + "px")
+                  .style("top", d3.event.pageY + 10 + "px")
+                })
+                .on("mouseleave", function() {
+                  d3.select(this)
+                    .attr("opacity", 0.8)
+                  tooltip
+                    .style("display", "none");
+                });
+
+        
+        })
+        
+        </script>
+    </div>
+
+    <!-- Experience-->
+    <div class="box grey" id="experience">
+        <div id="my_line" style="margin-left: 100px;margin-top: 20px;"></div>
+        <div class="textbox" style="border: dotted;margin-left:60px;">Explanation</div>
+        <script>
+
+            // set the dimensions and margins of the graph
+            var margin = {top: 10, right: 100, bottom: 30, left: 30}
+            var width = 400
+            var height = 400
+            
+            // append the svg object to the body of the page
+            var svg_line = d3.select("#my_line")
+              .append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+              .append("g")
+                .attr("transform",
+                      "translate(" + margin.left + "," + margin.top + ")");
+            
+            //Read the data
+            d3.csv("data/data_exp.csv", function(data) {
+                
+                // have a look to data
+                console.log(data)
+            
+                // Add X axis --> it is a date format
+                var x = d3.scaleBand()
+                  .domain(data.map(function(d) { return d.Seniority; }))
+                  .range([ 0, width ]);
+                svg_line.append("g")
+                  .attr("transform", "translate(50," + height + ")")
+                  .call(d3.axisBottom(x));
+            
+                // Add Y axis
+                var y = d3.scaleLinear()
+                  .domain( [50000,90000])
+                  .range([ height, 50 ]);
+                svg_line.append("g")
+                  .attr("transform", "translate(50,0)")
+                  .call(d3.axisLeft(y));
+            
+                // Add the line
+                svg_line
+                  .append("path")
+                    .datum(data)
+                    .attr("fill", "none")
+                    .attr("stroke", d3.schemePaired[8])
+                    .attr("stroke-width", 4)
+                    .attr("d", d3.line()
+                    .x(function(d) { return x(d.Seniority)+80 })
+                    .y(function(d) { return y(d.Salary) }))
+                
+                // // Add the points
+                svg_line
+                  // First we need to enter in a group
+                  .selectAll("myDots")
+                  .data(data)
+                  .enter()
+                    .append('g')
+                    .style("fill", d3.schemePaired[8])
+                  // Second we need to enter in the 'values' part of this group
+                  .selectAll("myPoints")
+                  .data(data)
+                  .enter()
+                  .append("circle")
+                    .attr("cx", function(d) { return x(d.Seniority)+80 } )
+                    .attr("cy", function(d) { return y(d.Salary) } )
+                    .attr("r", 5)
+                    .attr("stroke", "white")
+
+                  // text
+                  svg_line
+                    .selectAll("myLabels")
+                    .data(data)
+                    .enter()
+                    .append('g')
+                    .append("text")
+                      .attr("x", function(d) { return x(d.Seniority)+80 } )
+                      .attr("y", function(d) { return y(d.Salary) } )
+                      .text(function(d) { return "$"+Math.round(d.Salary); })
+                      .attr("font-family", "sans-serif")
+                      .attr("font-size", "11px")
+                      .attr("fill", "white")
+                      .attr("text-anchor", "middle")
+                      .attr("alignment-baseline", "middle")
+                      .attr("stroke", "black")
+                      .attr("stroke-width", 0.5)
+                      .attr("opacity", 0.8)
+                      .attr('dy', '-1em')
+                      .on("mouseover", function(d) {
+                        d3.select(this)
+                          .attr("font-size", "14px")
+                          .attr("opacity", 1)
+                          .attr("fill", "black")
+                      })
+                      .on("mouseout", function(d) {
+                        d3.select(this)
+                          .attr("font-size", "11px")
+                          .attr("opacity", 0.8)
+                          .attr("fill", "white")
+                      })
+            })
+            
+            
+            </script>
+
+    </div>
+
+    <!-- Gender -->
+    <div class="box" id="gender">
+      <div class="textbox" style="border: dotted;margin-left:100px;">Explanation</div>
+        <div id="my_pie" style="margin-left: 100px;margin-top: 60px;"></div>
+        <script>
+            // set the dimensions and margins of the graph
+            var width = 400
+            var height = 400
+            var margin = 40;
+            var padding ={top:40, bottom:40, left:40, right:40};
+
+            
+            // The radius of the pieplot is half the width or half the height (smallest one). I subtract a bit of margin.
+            var radius = Math.min(width, height) / 2 - margin
+            
+            // append the svg object to the div called 'my_pie'
+            var svg_pie = d3.select("#my_pie")
+              .append("svg")
+                .attr("width", width)
+                .attr("height", height)
+              .append("g")
+                .attr("transform", "translate(" + width / 2  + "," + height / 2 + ")");
+            
+                d3.csv("data/gender.csv",function(data) {
+                console.log(data)
+                var Male = data[1]['Gender']
+                var maleSalary = data[1]['Total_Salary']
+                var Female = data[0]['Gender']
+                var femaleSalary = data[0]['Total_Salary']
+
+                var data_gender = {Male:maleSalary, Female:femaleSalary}
+                console.log(data_gender)
+
+                // set the color scale
+                var color = d3.scaleOrdinal().domain(data_gender).range(['#99CCFF', '#FFCC99'])
+                // Compute the position of each group on the pie:
+                var pie = d3.pie()
+                    .value(function(d) {return d.value; })
+                var data_ready = pie(d3.entries(data_gender))
+
+                // shape helper to build arcs:
+                var arcGenerator = d3.arc()
+                    .innerRadius(0)
+                    .outerRadius(radius)
+                            
+                // Build the pie chart: Basically, each part of the pie is a path that we build using the arc function.
+                svg_pie
+                  .selectAll('#my_pie')
+                  .data(data_ready)
+                  .enter()
+                  .append('path')
+                  .attr('d', arcGenerator)
+                  .attr('fill', function(d){ return(color(d.data.key)) })
+                  .attr("stroke", "white")
+                  .style("stroke-width", "2px")
+                  .style("opacity", 1)
+                
+                // Now add the annotation. Use the centroid method to get the best coordinates
+                svg_pie
+                    .selectAll('#my_pie')
+                    .data(data_ready)
+                    .enter()
+                    .append('text')
+                    .text(function(d){ return "$" + Math.round(d.data.value)})
+                    .attr("transform", function(d) { return "translate(" + arcGenerator.centroid(d) + ")";  })
+                    .style("text-anchor", "middle")
+                    .style("font-size", 17)
+                
+                  // Handmade legend
+                svg_pie.append("circle").attr("cx",120).attr("cy",-170).attr("r", 6).style("fill", '#99CCFF')
+                svg_pie.append("circle").attr("cx",120).attr("cy",-190).attr("r", 6).style("fill", '#FFCC99')
+                svg_pie.append("text").attr("x", 140).attr("y", -170).text("Male").style("font-size", "15px").attr("alignment-baseline","middle")
+                svg_pie.append("text").attr("x", 140).attr("y", -190).text("FeMale").style("font-size", "15px").attr("alignment-baseline","middle")
+                
+
+
+            })    
+            </script>
+    </div>
+
+
+    <!-- footer-->
+    <div class="footer txtct"> 
+        <h4 style="color: white; padding-top: 100px;">FIT 5147 assessment 3</h3>
+    </div>
+</body>
+</html>
